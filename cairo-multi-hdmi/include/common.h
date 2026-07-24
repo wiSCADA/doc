@@ -38,6 +38,8 @@ typedef struct {
     int offline_frames;
     const char *font_family;
     const char *drm_path;     /* default /dev/dri/card0 */
+    const char *backend;      /* "cairo" or "gles" */
+    const char *present;      /* "share" (clone) or "per-output" */
 } app_config_t;
 
 typedef struct {

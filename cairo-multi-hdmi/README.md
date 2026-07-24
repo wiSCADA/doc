@@ -8,7 +8,38 @@
 - `world`：2×5 世界模拟时钟墙
 - `weather`：圆角天气卡片风格演示
 
-## 硬件前提（重要）
+## GPU-first for 4–8 HDMI
+
+If the product may drive **4 or even 8** outputs, do **not** scale the Cairo CPU path.
+
+Preferred model (see [`docs/GPU_ARCHITECTURE.md`](docs/GPU_ARCHITECTURE.md)):
+
+```text
+Mali GLES/Vulkan: draw shared UI once (often 1080p)
+    → RGA blit/scale to each 4K CRTC buffer
+    → DRM flips (display timing 4K@60)
+```
+
+CLI knobs already in the binary:
+
+```bash
+# Functional today: draw-once + clone present (CPU copy placeholder for RGA)
+./build/cairo-multi-hdmi --present share --outputs 4 --scale 0.5
+
+# On device later:
+cmake -S . -B build -DENABLE_GLES=ON
+./build/cairo-multi-hdmi --backend gles --present share --outputs 4
+```
+
+| Present mode | Meaning |
+|--------------|---------|
+| `--present share` | **Recommended**: one render, N outputs (clone/RGA) |
+| `--present per-output` | Full independent redraw per HDMI (expensive; avoid for 8) |
+
+**8×HDMI note:** one RK3588 usually cannot do 8 independent 4K@60 unique UIs. Use shared content, bridges/splitters, or multi-SoC. “充分用 GPU” = Mali 画**独特像素**，不是每路重复画满屏。
+
+## 依赖
+
 
 | 项目 | 说明 |
 |------|------|
