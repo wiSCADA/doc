@@ -38,8 +38,7 @@ cmake -S . -B build -DENABLE_GLES=ON
 
 **8×HDMI note:** one RK3588 usually cannot do 8 independent 4K@60 unique UIs. Use shared content, bridges/splitters, or multi-SoC. “充分用 GPU” = Mali 画**独特像素**，不是每路重复画满屏。
 
-## 依赖
-
+## 硬件前提（重要）
 
 | 项目 | 说明 |
 |------|------|
@@ -52,9 +51,9 @@ cmake -S . -B build -DENABLE_GLES=ON
 
 1. 枚举已连接 DRM connector  
 2. 为每个输出选择最接近 `--width/--height/--hz` 的 mode（默认 **3840×2160@60**）  
-3. 双缓冲 dumb FB + Cairo 绘制后提交显示  
+3. 双缓冲 dumb FB + 后端绘制后提交显示  
 
-## 4×4K@60 与 Cairo 的关系
+## 4×4K@60 与绘制负载
 
 - **显示扫描**可以是 4K@60（KMS mode）。  
 - **UI 全屏重绘**若用纯 CPU Cairo 跑满 4 路原生 4K@60，通常不现实。  
@@ -64,10 +63,11 @@ cmake -S . -B build -DENABLE_GLES=ON
 ```text
 --hz 60          → 尽量把 HDMI 设成 4K@60
 --fps 30         → UI 逻辑刷新 30Hz（可调）
---scale 0.5      → 先按 1920×1080 画，再放大到 4K framebuffer
+--scale 0.5      → 先按较低逻辑分辨率画，再放大到 4K framebuffer
+--present share  → 只画一次，多路复用（量产换 RGA）
 ```
 
-在 RK3588 量产中建议把 `--scale` 放大步骤换成 **RGA**（质量更好、CPU 更省）。当前仓库用 CPU nearest upscale 作为可移植占位。
+在 RK3588 量产中建议把放大/多路拷贝换成 **RGA**，绘制迁到 **GLES/Vulkan**。
 
 ### 粗算显存/缓冲（仅 framebuffer）
 
