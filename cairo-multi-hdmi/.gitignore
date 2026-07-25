@@ -1,0 +1,5 @@
+build/
+offline_frames/
+*.o
+*.a
+.DS_Store
